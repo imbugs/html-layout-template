@@ -1,0 +1,75 @@
+body {
+     /*width: 750px;*/
+     font-family: Arial, Verdana, sans-serif;
+     color: #665544;
+}
+
+/*body * {
+    border: 1px dotted blue;
+}
+*/
+h1 {
+     /*position: fixed;
+     top: 0px;
+     left: 0px;*/
+     margin: 0px;
+     padding: 10px;
+     /*width: 100%;*/
+     background-color: #efefef;
+     z-index: 10;
+}
+/*p {
+     position: relative;
+     top: 0px;
+     left: 0px;
+}
+*/
+
+p.example {
+    position: relative;
+    top: 5px;
+    left: 10px;
+}
+
+blockquote {
+    float: right;
+    width: 275px;
+    font-size: 130%;
+    font-style: italic;
+    font-family: Georgia, Times, serif;
+    margin: 0px 0px 10px 10px;
+    padding: 10px;
+    border-top: 1px solid #665544;
+    border-bottom: 1px solid #665544;
+
+}
+
+div#float-test {
+    border: 1px solid #665544;
+    overflow: auto;
+    width: 100%;
+}
+
+div#float-test p {
+    width: 230px;
+    margin: 5px;
+    padding: 5px;
+    float: left;
+    background-color: #efefef;
+}
+
+.clear {
+    clear: both;
+}
+
+.column1of2 {
+    float: left;
+    width: 60%;
+    margin: 2.5%;
+}
+
+.column2of2 {
+    float: left;
+    width: 30%;
+    margin: 2.5%;
+}
