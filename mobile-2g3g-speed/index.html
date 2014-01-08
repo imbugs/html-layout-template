@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=10">
+    <title>2g/3g网速测试</title>
+
+    <style>
+        body{
+            margin:1em 1em 3em;
+        }
+        button{
+            padding:3px 8px;
+        }
+        section{
+            display: none;
+            margin-bottom: 2em;
+            border-bottom: 1px solid #eee;
+        }
+        section h3, section .des, section .progress{
+            padding:0px;
+            margin-bottom: 1em;
+        }
+        .alert{
+            color:#F96400;
+        }
+
+        .progress{
+            position: relative;
+            height: 5px;
+        }
+        .progress p{
+            position: absolute;
+            transition: all 0.5s ease-in;
+            margin:0px;
+            padding:0px;
+        }
+        .progress p.d{
+            top:0px;
+            left:0px;
+            width:10px;
+            height: 5px;
+            background-color:#0000ff;
+            border-radius: 5px;
+        }
+        .progress p.t{
+            top:-5px;
+        }
+
+        .hidden{
+            width:1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<div>
+<p>请使用2g/3g网络帮助我们做一个简单的测试。所有下载的静态资源文件均来自TBCDN，会消耗你几百KB的流量。你也可以顺便感受一下在2g/3g网络下打开不同大小文件所需要的时间。</p>
+<p class="alert">为了保证数据的准确性，测试前请确保你已经关闭了wifi，感谢你的配合！</p>
+<button id="start" class="topcoat-button">开始测试</button>
+</div>
+
+
+<section id="testKISSYSEED">
+    <h3>测试KISSY1.4 seed-min加载时间</h3>
+    <p class="des">共42KB，gzip 15.6KB</p>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testKISSYCORE">
+    <h3>测试KISSY1.4dom,event,node,anim,ajax合计加载时间</h3>
+    <p class="des">共89.4KB，gzip 32.3KB</p>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testJQUERY">
+    <h3>测试jQuery1.10加载时间</h3>
+    <p class="des">共90.9KB，gzip 32.4KB</p>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+
+<section id="testZEPTO">
+    <h3>测试zeptojs加载时间</h3>
+    <p class="des">共26.6KB，gzip 10.0KB</p>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testONEIMAGE">
+    <h3>下载一张207KB的图片耗时</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+<section id="testTENIMAGE">
+    <h3>下载10张20KB的图片耗时</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+<section id="testMTB">
+    <h3>m.taobao.com onload时间</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+<section id="testBAIDU">
+    <h3>baidu.com onload时间</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testTMALL">
+    <h3>m.tmall.com onload时间</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testSINACN">
+    <h3>sina.cn onload时间</h3>
+    <div class="progress"><p class="d"></p><p class="t"></p></div>
+</section>
+
+
+<section id="testSubmit">
+    <h3>测试完成，提交测试数据</h3>
+    <p>感谢你帮做这个测试，请选择你的网络类型后提交保存测试结果，再次感谢!</p>
+    <p>
+        <label><input type="radio" name="nettype" value="2g"> 2g</label>
+        <label><input type="radio" name="nettype" value="3g"> 3g</label>
+    </p>
+    <p><button type="button">提交测试结果</button></p>
+</section>
+
+
+<script>
+    var timestamp = "20131121";
+    var doc = document;
+    var NETDATA = {}; //保存所有结果
+    var queue = new function(){
+        var arr = [];
+        this.add = function(func){
+            arr.push(func);
+        }
+        this.start = function(){
+            var f = arr.shift();
+            if(f && (typeof f == "function")){
+                f();
+            }
+        }
+        this.next = function(){
+            var f = arr.shift();
+            if(f && (typeof f == "function")){
+                setTimeout(function(){
+                    f();
+                },1000)
+            }
+        }
+    };
+
+
+
+    document.getElementById("start").addEventListener("click",function(){ queue.start();},false);
+
+
+    function progress(config){
+        var container = document.getElementById(config.container);
+        this.dom = {
+            c:container,
+            d:container.getElementsByClassName("d")[0],
+            t:container.getElementsByClassName("t")[0]
+        };
+        this.container = config.container;
+        this.count = 0;
+        this.interval = 100;
+    }
+    progress.prototype = {
+        sync: function(){
+            var t =  new Date()-this.beginTime,
+                d =  t/100;
+
+            //大于30s算超时
+            if(t>30000){
+                clearInterval(this.timer);
+                NETDATA[this.container] =   new Date()-this.beginTime;
+                this.dom["t"].innerText = "可能超时";
+                queue.next();
+            }
+
+            //最大250px，不然页面撑开了
+            if(d>250){
+                d=250;
+            }
+            this.dom["d"].style.width = d+"px";
+            this.dom["t"].style.left = (d+10)+"px";
+            this.dom["t"].innerText = t + "ms";
+        },
+        start: function(){
+            var self = this;
+            self.dom["c"].style.display="block";
+            self.beginTime = new Date();
+            self.timer = setInterval(function(){
+                self.sync();
+            },self.interval);
+            scrollTo(0,document.body.scrollHeight);
+        },
+        finish: function(){
+            clearInterval(this.timer);
+            NETDATA[this.container] =   new Date()-this.beginTime
+            this.sync();
+        }
+    }
+
+    queue.add(function(){
+        var p = new progress({
+            container:"testKISSYSEED"
+        })
+        var node = doc.createElement("script");
+        p.start();
+        node.charset = "utf-8";
+        node.setAttribute("data-config","{combine:true}");
+        node.async = true;
+        node.src = "http://g.tbcdn.cn/kissy/k/1.4.0/seed-min.js?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.getElementsByTagName("head")[0].appendChild(node);
+    });
+
+    queue.add(function(){
+        var p = new progress({
+            container:"testKISSYCORE"
+        })
+        p.start();
+        KISSY.use("dom,event,node,anim,ajax",function(S,DOM,Event,Node,Anim,Ajax){
+            p.finish();
+            queue.next();
+        })
+    });
+
+
+    queue.add(function(){
+        var p = new progress({
+            container:"testJQUERY"
+        })
+        var node = doc.createElement("script");
+        p.start();
+        node.charset = "utf-8";
+        node.async = true;
+        node.src = "http://g.tbcdn.cn/tb/tlabs/0.0.3/js/jquery/1.10.2.min.js?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.getElementsByTagName("head")[0].appendChild(node);
+    });
+
+    queue.add(function(){
+        var p = new progress({
+            container:"testZEPTO"
+        })
+        var node = doc.createElement("script");
+        p.start();
+        node.charset = "utf-8";
+        node.async = true;
+        node.src = "http://a.tbcdn.cn/mw/app/lottery/20131111/sb/zepto.min.js?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.getElementsByTagName("head")[0].appendChild(node);
+    });
+
+    //测试下载一张图片花费的时间
+    queue.add(function(){
+        var p = new progress({
+            container:"testONEIMAGE"
+        });
+        p.start();
+        var img = doc.createElement("img");
+        img.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        img.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        img.src="http://gtms01.alicdn.com/tps/i1/T1zcAfXediXXa.U337-800-800.jpg?"+timestamp;
+    });
+
+
+    queue.add(function(){
+        KISSY.use("node",function(S,Node){
+            var $=Node.all;
+            $('<p>下载10张36KB的图片，<span id="count"></span></p>').insertAfter("#testTENIMAGE h3");
+            var imglist = [],x= 0, l=10;
+            var em = $("#count");
+            var p = new progress({
+                container:"testTENIMAGE"
+            });
+
+            var imgs = [];
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1VGjLFgxXXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1fTsfXoVhXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1tXL6XaBmXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T13BTZFXJXXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1GhZsXglhXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1EJ_DFXVXXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1gQcgXX0hXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1.GsgXb4iXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1wogiXa8iXXaiKCsI-120-120.png")
+            imgs.push("http://gtms01.alicdn.com/tps/i1/T1gPjjFnXXXXaiKCsI-120-120.png")
+            imgs.forEach(function(img){
+                imglist.push('<img src="'+img+'?t='+timestamp+'" >');
+            });
+
+            p.start();
+            $(imglist.join("")).on("load",function(){
+                x++;
+                if(x>=10){
+                    //em.html('耗时'+(new Date()-begin)+'ms');
+                    em.html('下载完成');
+                    p.finish();
+                    queue.next();
+                }else{
+                    em.html('正在下载第'+x+'张');
+                }
+            }).addClass("hidden").appendTo(doc.body);
+        });
+    });
+
+
+
+
+    //mtb
+    queue.add(function(){
+        var p = new progress({
+            container:"testMTB"
+        })
+        var node = doc.createElement("iframe");
+        p.start();
+        node.className="hidden";
+        node.src = "http://m.taobao.com/?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.body.appendChild(node);
+
+    });
+
+    //百度onload
+    queue.add(function(){
+        var p = new progress({
+            container:"testBAIDU"
+        })
+        var node = doc.createElement("iframe");
+        p.start();
+        node.className="hidden";
+        node.src = "http://www.baidu.com/?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.body.appendChild(node);
+
+    });
+
+    //m.tmall.com
+    queue.add(function(){
+        var p = new progress({
+            container:"testTMALL"
+        })
+        var node = doc.createElement("iframe");
+        p.start();
+        node.className="hidden";
+        node.src = "http://m.tmall.com/?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.body.appendChild(node);
+
+    });
+
+    //SINA.cn onload
+    queue.add(function(){
+        var p = new progress({
+            container:"testSINACN"
+        })
+        var node = doc.createElement("iframe");
+        p.start();
+        node.className="hidden";
+        node.src = "http://www.sina.cn/?t="+timestamp;
+        node.onload = function(){
+            p.finish();
+            queue.next();
+        }
+        node.onerror = function(){
+            p.finish();
+            p.dom["t"].innerText = "加载失败";
+            queue.next();
+        }
+        doc.body.appendChild(node);
+
+    });
+
+
+    //发送反馈
+    queue.add(function(){
+        //记录状态
+        var first =  localStorage.getItem("_done_")?1:0;
+        localStorage.setItem("_done_",1);
+
+        var container = document.getElementById("testSubmit");
+        container.style.display="block";
+        scrollTo(0,document.body.scrollHeight);
+        container.getElementsByTagName("button")[0].addEventListener("click",function(){
+
+            var tl = container.querySelectorAll(":checked");
+            if(tl.length!=1){
+                alert("请选择你的网络类型");
+            }
+            var img = new Image();
+            var id = "_beacon_" + timestamp;
+
+            window[id] = img;
+            img.src = "http://log.mmstat.com/ued.1.1.2?_gm:id=changyin_wireless&nh="+first+"&nt="+tl[0].value+"&ns="+JSON.stringify(NETDATA)+"&_r_=" + Math.random();
+            img.onload = function () {
+                window[id] = null;
+                alert("测试结果已成功提交，再次感谢你的参与！\n\n如果你愿意帮我们提高数据的准确性，可以刷新页面重新测试并提交测试结果。")
+                container.style.display="none";
+            }
+        },false);
+    });
+
+
+
+</script>
+
+</body>
+</html>
